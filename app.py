@@ -1,33 +1,25 @@
-import numpy as np
+from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+DATA_PATH = Path(__file__).parent / "data" / "scores.csv"
 
 st.set_page_config(page_title="Score distribution", layout="wide")
 st.title("Score distribution by group")
 
 
 @st.cache_data
-def load_data():
-    rng = np.random.default_rng(42)
-    groups = {
-        "Group A": rng.normal(70, 8, 100),
-        "Group B": rng.normal(75, 12, 100),
-        "Group C": rng.normal(65, 5, 100),
-        "Group D": np.concatenate([rng.normal(80, 6, 95), [40, 45, 120]]),
-    }
-    return pd.DataFrame(
-        [(g, v) for g, vals in groups.items() for v in vals],
-        columns=["group", "score"],
-    )
+def load_data(path: Path) -> pd.DataFrame:
+    return pd.read_csv(path)
 
 
-df = load_data()
+df = load_data(DATA_PATH)
 
 # Sidebar controls
-selected = st.sidebar.multiselect(
-    "Groups", df["group"].unique(), default=list(df["group"].unique())
-)
+groups = sorted(df["group"].unique())
+selected = st.sidebar.multiselect("Groups", groups, default=groups)
 points = st.sidebar.selectbox("Points", ["outliers", "all", False])
 
 filtered = df[df["group"].isin(selected)]
